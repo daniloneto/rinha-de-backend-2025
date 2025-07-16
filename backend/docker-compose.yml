@@ -1,0 +1,78 @@
+version: '3.8'
+
+x-service-templates:
+  backend-template: &backend-template
+    build: .
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - PAYMENT_PROCESSOR_URL_DEFAULT=http://payment-processor-default:8080
+      - PAYMENT_PROCESSOR_URL_FALLBACK=http://payment-processor-fallback:8080
+      - REDIS_CONNECTION_STRING=redis:6379
+      - ASPNETCORE_HTTP_PORTS=8080
+    depends_on:
+      - redis
+    networks:
+      - backend
+      - payment-processor
+    restart: unless-stopped
+    mem_limit: 350m
+    cpus: 1.5
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+      
+services:
+  # Load Balancer
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: payment-loadbalancer
+    ports:
+      - "9999:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend-1
+      - backend-2
+    networks:
+      - backend
+    restart: unless-stopped
+
+  # Backend Instance 1
+  backend-1:
+    <<: *backend-template
+    container_name: payment-backend-1
+
+  # Backend Instance 2
+  backend-2:
+    <<: *backend-template
+    container_name: payment-backend-2
+
+  # Redis for queue and shared storage
+  redis:
+    image: redis:7.2-alpine
+    container_name: payment-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    restart: unless-stopped
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge
+  payment-processor:
+    external: true

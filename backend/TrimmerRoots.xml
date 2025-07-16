@@ -1,0 +1,5 @@
+<linker>
+  <assembly fullname="PaymentBackend" />
+  <assembly fullname="System.Text.Json" />
+  <assembly fullname="StackExchange.Redis" />
+</linker>

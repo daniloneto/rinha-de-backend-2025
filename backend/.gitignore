@@ -1,0 +1,31 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# Dependencies
+node_modules/
+
+# IDE
+.vs/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# Docker
+.dockerignore
+
+# Redis data
+redis_data/

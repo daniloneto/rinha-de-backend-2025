@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <TrimmerRootDescriptor Include="TrimmerRoots.xml" />
+  </ItemGroup>
+</Project>
